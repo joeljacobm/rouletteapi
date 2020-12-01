@@ -8,6 +8,7 @@ import (
 type RoomService interface {
 	Create(room Room) error
 	GetRoomCount(roomID string) (int, error)
+	UpdateRound(roomID string) error
 }
 
 type roomService struct {
@@ -37,4 +38,11 @@ func (rs roomService) GetRoomCount(RoomID string) (int, error) {
 	row := stmnt.QueryRow(RoomID)
 	err := row.Scan(&count)
 	return count, err
+}
+
+func (rs roomService) UpdateRound(roomID string) error {
+	stmnt := rs.db.MustPrepare(`UPDATE room SET current_round = current_round+1 WHERE id = $1;`)
+	_, err := stmnt.Exec(roomID)
+	return err
+
 }

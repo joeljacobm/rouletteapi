@@ -77,6 +77,27 @@ ALTER TABLE public.bet
     OWNER to postgres;
 
 
+-- Table: public.result
+
+-- DROP TABLE public.result;
+
+CREATE TABLE public.result
+(
+    created time without time zone,
+    round_no integer NOT NULL,
+    room_id text COLLATE pg_catalog."default" NOT NULL,
+    "number" integer NOT NULL,
+    colour integer NOT NULL
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public.result
+    OWNER to postgres;
+
+
 
 
 

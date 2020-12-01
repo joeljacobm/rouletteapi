@@ -7,7 +7,10 @@ import (
 
 type PlayerService interface {
 	Join(player Player) error
-	GetPlayerCount(player Player) (int, error)
+	GetPlayer(id string,roomid string) (Player, error)
+	// CheckInRoom(player Player) (bool, bool, error)
+	GetReadyStatusForRound(roomid string) (int, error)
+	UpdateReadyStatus(player Player) error
 }
 
 type playerService struct {
@@ -30,10 +33,32 @@ func (ps playerService) Join(player Player) error {
 	return err
 }
 
-func (ps playerService) GetPlayerCount(player Player) (int, error) {
+func (ps playerService) GetPlayer(id string,roomid string) (Player, error) {
+	var player Player
+	stmnt := ps.db.MustPrepare(`SELECT * FROM player WHERE player_id = $1 AND room_id = $2 limit 1;`)
+	row := stmnt.QueryRow(id,roomid)
+	err := row.Scan(&player.Created,&player.ID,&player.RoomID,&player.InRoom,&player.ReadyStatus,&player.DisplayName)
+	return player,err
+}
+
+// func (ps playerService) CheckInRoom(player Player) (bool, bool, error) {
+// 	var inroom, readystatus bool
+// 	stmnt := ps.db.MustPrepare(`SELECT in_room,ready_status FROM player WHERE player_id = $1 AND room_id = $2;`)
+// 	row := stmnt.QueryRow(player.ID, player.RoomID)
+// 	err := row.Scan(&inroom, &readystatus)
+// 	return inroom, readystatus, err
+// }
+
+func (ps playerService) GetReadyStatusForRound(roomid string) (int, error) {
 	var count int
-	stmnt := ps.db.MustPrepare(`SELECT count(*) FROM player where player_id = $1 AND room_id = $2;`)
-	row := stmnt.QueryRow(player.ID, player.RoomID)
+	stmnt := ps.db.MustPrepare(`SELECT count(*) FROM player WHERE room_id = $1 AND ready_status = false;`)
+	row := stmnt.QueryRow(roomid)
 	err := row.Scan(&count)
 	return count, err
+}
+
+func (ps playerService) UpdateReadyStatus(player Player) error {
+	stmnt := ps.db.MustPrepare(`UPDATE player set ready_status = TRUE WHERE player_id = $1 AND room_id = $2;`)
+	_,err := stmnt.Exec(player.ID,player.RoomID)
+	return err
 }

@@ -7,12 +7,14 @@ import (
 type services struct {
 	Room   RoomService
 	Player PlayerService
+	Bet    BetService
 }
 
 func NewServices(db postgres.DB) services {
 	return services{
 		Room: roomService{db: db},
 		Player:playerService{db: db},
+		Bet: betService{db: db},
 	}
 }
 

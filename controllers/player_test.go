@@ -26,7 +26,7 @@ func TestPlayerJoinHandler(t *testing.T) {
 	db := postgres.DefaultConnection()
 
 	services := mocks.NewMockServices(db)
-	playerC := NewPlayer(services.Player, services.Room, nil)
+	playerC := NewPlayer(services.Player, services.Room, services.Bet, nil)
 	b, _ := json.Marshal(testData)
 
 	w := httptest.NewRecorder()

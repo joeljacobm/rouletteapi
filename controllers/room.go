@@ -36,7 +36,7 @@ func (ro *Room) RoomHandler(w http.ResponseWriter, r *http.Request) {
 
 	room.ID = roomID
 	room.Created = time.Now()
-	room.CurrentRound = 0
+	room.CurrentRound = 1
 
 	err = ro.Room.Create(room)
 	if err != nil {

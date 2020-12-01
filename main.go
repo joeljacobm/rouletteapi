@@ -26,14 +26,20 @@ func main() {
 	r := router.PathPrefix("/api/v1").Subrouter()
 
 	roomController := controllers.NewRoom(services.Room, r)
-	playerController := controllers.NewPlayer(services.Player, services.Room, r)
+	playerController := controllers.NewPlayer(services.Player, services.Room, services.Bet, r)
+	betController := controllers.NewBet(services.Player, services.Room, services.Bet, r)
 
 	r.Use(prometheus.PrometheusMiddleware)
-	r.HandleFunc("/room", roomController.RoomHandler).Methods("POST")
-	
-	r.HandleFunc("/player/join", playerController.PlayerJoinHandler).Methods("POST")
-
 	r.Handle("/metrics", promhttp.Handler())
 
-	http.ListenAndServe(":8080", r)
+	r.HandleFunc("/room", roomController.RoomHandler).Methods("POST")
+
+	r.HandleFunc("/player/bet", playerController.PlayerGetBetHandler).Methods("GET")
+	r.HandleFunc("/player/join", playerController.PlayerJoinHandler).Methods("POST")
+	r.HandleFunc("/player/bet", playerController.PlayerBetHandler).Methods("POST")
+	r.HandleFunc("/player/ready", playerController.PlayerReadyHandler).Methods("POST")
+
+	r.HandleFunc("/bet/result", betController.BetResultHandler).Methods("POST")
+
+	http.ListenAndServe(":8080", router)
 }
