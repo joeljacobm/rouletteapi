@@ -1,0 +1,14 @@
+{
+    "1":{
+        "variant_name":"sky_roulette",
+       "variant_type":1,
+       "max_players":7,
+       "max_rounds":10
+    },
+    "2":{
+        "variant_name":"superboost_roulette",
+       "variant_type":2,
+       "max_players":7,
+       "max_rounds":10
+    }
+ }

@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  postgresql:
+    image: postgres:10
+    container_name: pg-docker
+    ports:
+      - "5400:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=roulette
+    volumes:
+      - my_dbdata:/var/lib/postgres/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+   
+volumes:
+  my_dbdata:
