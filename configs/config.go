@@ -2,7 +2,6 @@ package configs
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"rouletteapi/models"
@@ -50,18 +49,12 @@ func LoadRouletteOddsMap(file string) {
 		panic(err)
 	}
 	log.Println("Successfully loaded .config")
-	fmt.Println(rouletteBetOddsMap)
 }
 
 func GetRouletteOddsMap(betType int) float64 {
 
 	if _, ok := rouletteBetOddsMap[betType]; ok {
-
-		if betType <= 36 {
-			return rouletteBetOddsMap[1].OddsDecimal // Straight Up
-		}
-		return rouletteBetOddsMap[betType].OddsDecimal // Other Bet Types
+		return rouletteBetOddsMap[betType].OddsDecimal // Straight Up
 	}
-
 	return 1.00
 }

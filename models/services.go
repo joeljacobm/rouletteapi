@@ -4,27 +4,24 @@ import (
 	"rouletteapi/postgres"
 )
 
-type services struct {
+type Services struct {
 	Room   RoomService
 	Player PlayerService
 	Bet    BetService
 }
 
-func NewServices(db postgres.DB) services {
-	return services{
-		Room: roomService{db: db},
-		Player:playerService{db: db},
-		Bet: betService{db: db},
+func NewServices(db postgres.DB) Services {
+	return Services{
+		Room:   roomService{db},
+		Player: playerValidator{PlayerService: playerService{db: db}},
+		Bet:    betService{db: db},
 	}
 }
 
 // func NewRoomService(db postgres.DB) RoomService {
-// 	return 
+// 	return
 // }
 
 // func NewPlayerService(db postgres.DB) PlayerService {
-// 	return 
+// 	return
 // }
-
-
-

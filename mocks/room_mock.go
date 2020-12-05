@@ -13,44 +13,56 @@ type mockServices struct {
 
 func NewMockServices(db postgres.DB) mockServices {
 	return mockServices{
-		Room:   mockRoomService{db: db},
-		Player: mockPlayerService{db: db},
-		Bet:    mockBetService{db: db},
+		Room:   RoomService{db: db},
+		Player: PlayerValidator{PlayerService: PlayerService{db: db}},
+		Bet:    BetService{db: db},
 	}
 }
 
-type mockRoomService struct {
+type RoomService struct {
 	db postgres.DB
 }
 
-type mockPlayerService struct {
+type PlayerService struct {
 	db postgres.DB
 }
 
-type mockBetService struct {
+type PlayerValidator struct {
+	models.PlayerService
+}
+
+type BetService struct {
 	db postgres.DB
 }
 
-func (rs mockRoomService) Create(room models.Room) error {
+func (rs RoomService) Create(room models.Room) error {
 	return nil
 }
 
-func (rs mockRoomService) GetRoomCount(RoomID string) (int, error) {
+func (rs RoomService) GetRoomCount(RoomID string) (int, error) {
 	return 1, nil
 }
 
-func (rs mockRoomService) UpdateRound(roomID string) error {
+func (rs RoomService) UpdateRound(roomID string) error {
 
 	return nil
 
 }
 
-func (ps mockPlayerService) Join(player models.Player) error {
+// func (pv PlayerValidator) Join(player models.Player) error {
+
+// 	if len(player.ID) < 10 {
+// 		return errors.New("Player ID must be 10 characters in length")
+// 	}
+// 	return pv.Join(player)
+// }
+
+func (ps PlayerService) Join(player models.Player) error {
 
 	return nil
 }
 
-func (ps mockPlayerService) GetPlayer(id string, roomid string) (models.Player, error) {
+func (ps PlayerService) GetPlayer(id string, roomid string) (models.Player, error) {
 
 	return models.Player{}, nil
 }
@@ -60,19 +72,32 @@ func (ps mockPlayerService) GetPlayer(id string, roomid string) (models.Player, 
 // 	return true, false, nil
 // }
 
-func (ps mockPlayerService) GetReadyStatusForRound(roomid string) (int, error) {
+func (ps PlayerService) GetReadyStatusForRound(roomid string) (int, error) {
 	return 0, nil
 }
 
-func (bs mockBetService) PlaceBet(bet models.Bet, player models.Player) error {
+func (bs BetService) PlaceBet(bet models.Bet, player models.Player) error {
 	return nil
 }
 
-func (bs mockBetService) InsertResult(bet models.Bet) error {
+func (bs BetService) InsertResult(bet models.Bet) error {
 	return nil
 }
 
-func (ps mockPlayerService) UpdateReadyStatus(player models.Player) error {
+func (ps PlayerService) UpdateReadyStatusTrue(player models.Player) error {
 
 	return nil
+}
+
+
+func (ps PlayerService) UpdateReadyStatusFalse(roomid string) error {
+	
+	return nil
+}
+
+func (bs BetService) GetBet(id string, roomid string, roundno int) ([]models.Bet, error) {
+
+	return []models.Bet{{RoomID: "100D2BF54B", RoundNo: 1, BetType: 1, Stake: 1.5, Liability: 52.5, Selection: 24,
+		BetResult: models.Result{Number: 24, Colour: 2}}, {RoomID: "100D2BF54B", RoundNo: 1, BetType: 2, Stake: 1.5, Liability: 52.5, Selection: 1,
+		BetResult: models.Result{Number: 24, Colour: 2}}}, nil
 }

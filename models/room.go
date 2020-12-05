@@ -11,6 +11,10 @@ type RoomService interface {
 	UpdateRound(roomID string) error
 }
 
+type roomValidator struct {
+	RoomService
+}
+
 type roomService struct {
 	db postgres.DB
 }

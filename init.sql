@@ -61,6 +61,7 @@ CREATE TABLE public.bet
     created timestamp without time zone,
     round_no integer NOT NULL,
     bettype integer NOT NULL,
+    selection integer NOT NULL,
     stake numeric NOT NULL,
     liability numeric,
     player_id text COLLATE pg_catalog."default" NOT NULL,

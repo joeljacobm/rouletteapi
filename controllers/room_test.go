@@ -9,7 +9,6 @@ import (
 	"rouletteapi/configs"
 	"rouletteapi/mocks"
 	"rouletteapi/models"
-	"rouletteapi/postgres"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,10 +22,9 @@ func TestRoomHandlerDefaultVariant(t *testing.T) {
 	}
 
 	configs.LoadRouletteVariantMap("../configs/config.json")
-	db := postgres.DefaultConnection()
 
 	services := mocks.NewMockServices(db)
-	roomC := NewRoom(services.Room, nil)
+	roomC := NewRoom(services.Room)
 
 	b, _ := json.Marshal(testData)
 	w := httptest.NewRecorder()
@@ -41,6 +39,7 @@ func TestRoomHandlerDefaultVariant(t *testing.T) {
 	}{}
 	json.Unmarshal(resp, &expected)
 
+	assert.Equal(t, 200, w.Result().StatusCode)
 	assert.Equal(t, 10, len(expected.Data.ID))
 	assert.Equal(t, 7, expected.Data.MaxPlayers)
 	assert.Equal(t, 10, expected.Data.NumOfRounds)
@@ -57,9 +56,8 @@ func TestRoomHandlerCustomVariant(t *testing.T) {
 	}
 	configs.LoadRouletteVariantMap("../mocks/testconfig.json")
 
-	db := postgres.DefaultConnection()
 	services := mocks.NewMockServices(db)
-	roomC := NewRoom(services.Room, nil)
+	roomC := NewRoom(services.Room)
 	b, _ := json.Marshal(testData)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/room", bytes.NewReader(b))
@@ -73,6 +71,7 @@ func TestRoomHandlerCustomVariant(t *testing.T) {
 	}{}
 	json.Unmarshal(resp, &expected)
 
+	assert.Equal(t, 200, w.Result().StatusCode)
 	assert.Equal(t, 10, len(expected.Data.ID))
 	assert.Equal(t, 15, expected.Data.MaxPlayers)
 	assert.Equal(t, 10, expected.Data.NumOfRounds)

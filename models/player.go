@@ -1,16 +1,22 @@
 package models
 
 import (
+	"errors"
 	"rouletteapi/postgres"
 	"time"
 )
 
 type PlayerService interface {
 	Join(player Player) error
-	GetPlayer(id string,roomid string) (Player, error)
+	GetPlayer(id string, roomid string) (Player, error)
 	// CheckInRoom(player Player) (bool, bool, error)
 	GetReadyStatusForRound(roomid string) (int, error)
-	UpdateReadyStatus(player Player) error
+	UpdateReadyStatusTrue(player Player) error
+	UpdateReadyStatusFalse(roomid string) error
+}
+
+type playerValidator struct {
+	PlayerService
 }
 
 type playerService struct {
@@ -27,18 +33,26 @@ type Player struct {
 	Created     time.Time `json:"created_at"`
 }
 
+func (pv playerValidator) Join(player Player) error {
+
+	if len(player.ID) < 10 {
+		return errors.New("Player ID must be atleast 10 characters long")
+	}
+	return pv.PlayerService.Join(player)
+}
+
 func (ps playerService) Join(player Player) error {
 	stmnt := ps.db.MustPrepare(`INSERT INTO player(created,player_id,room_id,in_room,ready_status,name) VALUES($1,$2,$3,$4,$5,$6);`)
 	_, err := stmnt.Exec(player.Created, player.ID, player.RoomID, player.InRoom, player.ReadyStatus, player.DisplayName)
 	return err
 }
 
-func (ps playerService) GetPlayer(id string,roomid string) (Player, error) {
+func (ps playerService) GetPlayer(id string, roomid string) (Player, error) {
 	var player Player
 	stmnt := ps.db.MustPrepare(`SELECT * FROM player WHERE player_id = $1 AND room_id = $2 limit 1;`)
-	row := stmnt.QueryRow(id,roomid)
-	err := row.Scan(&player.Created,&player.ID,&player.RoomID,&player.InRoom,&player.ReadyStatus,&player.DisplayName)
-	return player,err
+	row := stmnt.QueryRow(id, roomid)
+	err := row.Scan(&player.Created, &player.ID, &player.RoomID, &player.InRoom, &player.ReadyStatus, &player.DisplayName)
+	return player, err
 }
 
 // func (ps playerService) CheckInRoom(player Player) (bool, bool, error) {
@@ -57,8 +71,14 @@ func (ps playerService) GetReadyStatusForRound(roomid string) (int, error) {
 	return count, err
 }
 
-func (ps playerService) UpdateReadyStatus(player Player) error {
-	stmnt := ps.db.MustPrepare(`UPDATE player set ready_status = TRUE WHERE player_id = $1 AND room_id = $2;`)
-	_,err := stmnt.Exec(player.ID,player.RoomID)
+func (ps playerService) UpdateReadyStatusTrue(player Player) error {
+	stmnt := ps.db.MustPrepare(`UPDATE player set ready_status = true WHERE player_id = $1 AND room_id = $2;`)
+	_, err := stmnt.Exec(player.ID, player.RoomID)
+	return err
+}
+
+func (ps playerService) UpdateReadyStatusFalse(roomid string) error {
+	stmnt := ps.db.MustPrepare(`UPDATE player set ready_status = false WHERE room_id = $1;`)
+	_, err := stmnt.Exec(roomid)
 	return err
 }
