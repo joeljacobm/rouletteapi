@@ -24,6 +24,7 @@ func LoadRouletteVariantMap(file string) {
 	if err != nil {
 		panic(err)
 	}
+
 	log.Println("Successfully loaded .config")
 }
 

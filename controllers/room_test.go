@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"rouletteapi/configs"
-	"rouletteapi/mocks"
 	"rouletteapi/models"
 	"testing"
 
@@ -22,9 +21,6 @@ func TestRoomHandlerDefaultVariant(t *testing.T) {
 	}
 
 	configs.LoadRouletteVariantMap("../configs/config.json")
-
-	services := mocks.NewMockServices(db)
-	roomC := NewRoom(services.Room)
 
 	b, _ := json.Marshal(testData)
 	w := httptest.NewRecorder()
@@ -56,8 +52,6 @@ func TestRoomHandlerCustomVariant(t *testing.T) {
 	}
 	configs.LoadRouletteVariantMap("../mocks/testconfig.json")
 
-	services := mocks.NewMockServices(db)
-	roomC := NewRoom(services.Room)
 	b, _ := json.Marshal(testData)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/room", bytes.NewReader(b))

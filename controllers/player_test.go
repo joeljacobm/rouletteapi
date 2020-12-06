@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"rouletteapi/configs"
-	"rouletteapi/mocks"
 	"rouletteapi/models"
 	"testing"
 
@@ -24,8 +23,6 @@ func TestPlayerJoinHandler(t *testing.T) {
 		ID:     "5EB8E63F56",
 	}
 
-	services := mocks.NewMockServices(db)
-	playerC := NewPlayer(services.Player, services.Room, services.Bet)
 	b, _ := json.Marshal(testData)
 
 	w := httptest.NewRecorder()
@@ -58,8 +55,6 @@ func TestPlayerBetHandler(t *testing.T) {
 		},
 	}
 
-	services := mocks.NewMockServices(db)
-	playerC := NewPlayer(services.Player, services.Room, services.Bet)
 	b, _ := json.Marshal(testData)
 
 	w := httptest.NewRecorder()
@@ -78,11 +73,9 @@ func TestPlayerBetHandler(t *testing.T) {
 	assert.Equal(t, 200, w.Result().StatusCode)
 }
 
-func TestPlayerGetBetHandler(t *testing.T) {
+func TestPlayerGetResultHandler(t *testing.T) {
 
 	configs.LoadRouletteOddsMap("../configs/oddsconfig.json")
-	services := mocks.NewMockServices(db)
-	playerC := NewPlayer(services.Player, services.Room, services.Bet)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/player/result", nil)
@@ -95,7 +88,7 @@ func TestPlayerGetBetHandler(t *testing.T) {
 
 	r = mux.SetURLVars(r, vars)
 	r.Header.Add("Content-Type", "application/json")
-	playerC.PlayerGetBetHandler(w, r)
+	playerC.PlayerGetResultHandler(w, r)
 
 	resp, _ := ioutil.ReadAll(w.Body)
 
@@ -121,6 +114,32 @@ func TestPlayerGetBetHandler(t *testing.T) {
 	assert.Equal(t, 24, bet2.BetResult.Number)
 	assert.Equal(t, 2, bet2.BetResult.Colour)
 
+	assert.Equal(t, 200, w.Result().StatusCode)
+
+}
+
+func TestPlayerReadyHandler(t *testing.T) {
+
+	testData := models.Player{
+		RoomID: "100D2BF54B",
+		ID:     "5EB8E64F56",
+	}
+	b, _ := json.Marshal(testData)
+
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/player/ready", bytes.NewReader(b))
+
+	r.Header.Add("Content-Type", "application/json")
+	playerC.PlayerReadyHandler(w, r)
+
+	resp, _ := ioutil.ReadAll(w.Body)
+
+	expected := struct {
+		message string
+		Data    models.Player
+	}{}
+	json.Unmarshal(resp, &expected)
 	assert.Equal(t, 200, w.Result().StatusCode)
 
 }

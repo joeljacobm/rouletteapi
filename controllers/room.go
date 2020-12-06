@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"rouletteapi/configs"
 	"rouletteapi/models"
 	"time"
 
+	"github.com/gorilla/mux"
 )
 
 type Room struct {
@@ -51,3 +53,46 @@ func (ro *Room) RoomHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, resp)
 }
 
+func (ro *Room) RoomGetAllHandler(w http.ResponseWriter, r *http.Request) {
+
+	rooms, err := ro.Room.GetAllRoom()
+	if err != nil {
+		writeErrorWithMsg(w, err)
+		return
+	}
+
+	resp := struct {
+		message string
+		Data    []models.Room
+	}{
+		message: "Successfully created the room",
+		Data:    rooms,
+	}
+	writeJSON(w, resp)
+}
+
+func (ro *Room) RoomGetHandler(w http.ResponseWriter, r *http.Request) {
+
+	rMap := mux.Vars(r)
+
+	roomid := rMap["id"]
+	if len(roomid) == 0 {
+		writeErrorWithMsg(w, errors.New("roomid must be provided"))
+		return
+	}
+
+	room, err := ro.Room.GetRoom(roomid)
+	if err != nil {
+		writeErrorWithMsg(w, err)
+		return
+	}
+
+	resp := struct {
+		message string
+		Data    models.Room
+	}{
+		message: "Successfully created the room",
+		Data:    room,
+	}
+	writeJSON(w, resp)
+}

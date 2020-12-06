@@ -9,6 +9,8 @@ type BetService interface {
 	PlaceBet(bet Bet, player Player) error
 	InsertResult(bet Bet) error
 	GetBet(id string, roomid string, roundno int) ([]Bet, error)
+	GetBetForPlayer(roomid string) ([]Bet, error)
+	GetBetForRoom(roomid string) ([]Bet, error)
 }
 
 type betService struct {
@@ -56,6 +58,48 @@ func (bs betService) GetBet(id string, roomid string, roundno int) ([]Bet, error
 	var bets []Bet
 	stmnt := bs.db.MustPrepare(`SELECT b.room_id,b.round_no, b.bettype,b.selection,b.stake,b.liability,r.number,r.colour FROM bet b LEFT JOIN result r ON b.room_id = r.room_id WHERE b.player_id = $1 AND r.room_id = $2 AND r.round_no = $3;`)
 	rows, err := stmnt.Query(id, roomid, roundno)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err := rows.Scan(&bet.RoomID, &bet.RoundNo, &bet.BetType, &bet.Selection, &bet.Stake, &bet.Liability, &bet.BetResult.Number, &bet.BetResult.Colour)
+		if err != nil {
+			return nil, err
+		}
+		bets = append(bets, bet)
+
+	}
+
+	return bets, err
+}
+
+func (bs betService) GetBetForRoom(roomid string) ([]Bet, error) {
+	var bet Bet
+	var bets []Bet
+	stmnt := bs.db.MustPrepare(`SELECT b.room_id,b.round_no, b.bettype,b.selection,b.stake,b.liability,r.number,r.colour FROM bet b LEFT JOIN result r ON b.room_id = r.room_id WHERE r.room_id = $1;`)
+	rows, err := stmnt.Query(roomid)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err := rows.Scan(&bet.RoomID, &bet.RoundNo, &bet.BetType, &bet.Selection, &bet.Stake, &bet.Liability, &bet.BetResult.Number, &bet.BetResult.Colour)
+		if err != nil {
+			return nil, err
+		}
+		bets = append(bets, bet)
+
+	}
+
+	return bets, err
+}
+
+func (bs betService) GetBetForPlayer(playerid string) ([]Bet, error) {
+	var bet Bet
+	var bets []Bet
+	stmnt := bs.db.MustPrepare(`SELECT b.room_id,b.round_no, b.bettype,b.selection,b.stake,b.liability,r.number,r.colour FROM bet b LEFT JOIN result r ON b.room_id = r.room_id WHERE b.player_id = $1;`)
+	rows, err := stmnt.Query(playerid)
 	if err != nil {
 		return nil, err
 	}

@@ -9,10 +9,12 @@ import (
 type PlayerService interface {
 	Join(player Player) error
 	GetPlayer(id string, roomid string) (Player, error)
-	// CheckInRoom(player Player) (bool, bool, error)
+	GetAllPlayers() ([]Player, error)
 	GetReadyStatusForRound(roomid string) (int, error)
 	UpdateReadyStatusTrue(player Player) error
 	UpdateReadyStatusFalse(roomid string) error
+	CheckPlayerInRoomCount(id string) (int, error)
+	Exit(player Player) error
 }
 
 type playerValidator struct {
@@ -26,9 +28,9 @@ type playerService struct {
 type Player struct {
 	ID          string    `json:"id"`
 	RoomID      string    `json:"room_id"`
+	DisplayName string    `json:"display_name"`
 	ReadyStatus bool      `json:"ready_status"`
 	BetsPlaced  []Bet     `json:"bets_placed"`
-	DisplayName string    `json:"display_name"`
 	InRoom      bool      `json:"in_room"`
 	Created     time.Time `json:"created_at"`
 }
@@ -55,13 +57,32 @@ func (ps playerService) GetPlayer(id string, roomid string) (Player, error) {
 	return player, err
 }
 
-// func (ps playerService) CheckInRoom(player Player) (bool, bool, error) {
-// 	var inroom, readystatus bool
-// 	stmnt := ps.db.MustPrepare(`SELECT in_room,ready_status FROM player WHERE player_id = $1 AND room_id = $2;`)
-// 	row := stmnt.QueryRow(player.ID, player.RoomID)
-// 	err := row.Scan(&inroom, &readystatus)
-// 	return inroom, readystatus, err
-// }
+func (ps playerService) CheckPlayerInRoomCount(id string) (int, error) {
+	var count int
+	stmnt := ps.db.MustPrepare(`SELECT COUNT(*) FROM player WHERE player_id = $1 AND in_room = true;`)
+	row := stmnt.QueryRow(id)
+	err := row.Scan(&count)
+	return count, err
+
+}
+
+func (ps playerService) GetAllPlayers() ([]Player, error) {
+	var player Player
+	var players []Player
+	stmnt := ps.db.MustPrepare(`SELECT * FROM player;`)
+	rows, err := stmnt.Query()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		err := rows.Scan(&player.Created, &player.ID, &player.RoomID, &player.InRoom, &player.ReadyStatus, &player.DisplayName)
+		if err != nil {
+			return nil, err
+		}
+		players = append(players, player)
+	}
+	return players, err
+}
 
 func (ps playerService) GetReadyStatusForRound(roomid string) (int, error) {
 	var count int
@@ -80,5 +101,11 @@ func (ps playerService) UpdateReadyStatusTrue(player Player) error {
 func (ps playerService) UpdateReadyStatusFalse(roomid string) error {
 	stmnt := ps.db.MustPrepare(`UPDATE player set ready_status = false WHERE room_id = $1;`)
 	_, err := stmnt.Exec(roomid)
+	return err
+}
+
+func (ps playerService) Exit(player Player) error {
+	stmnt := ps.db.MustPrepare(`UPDATE player set in_room = false WHERE room_id = $1 AND player_id = $2;`)
+	_, err := stmnt.Exec(player.RoomID, player.ID)
 	return err
 }

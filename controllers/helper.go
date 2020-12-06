@@ -29,7 +29,7 @@ func GenerateHash() string {
 	n := 5
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return ""
 	}
 	s := fmt.Sprintf("%X", b)
 
@@ -86,4 +86,9 @@ func resultWin(bet *models.Bet, odds float64) {
 func resultLost(bet *models.Bet) {
 	bet.Result = 0
 	bet.ResultText = "LOST"
+}
+
+func calculateLiability(bettype int, stake float64) float64 {
+	odds := configs.GetRouletteOddsMap(bettype)
+	return odds * stake
 }

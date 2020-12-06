@@ -9,6 +9,8 @@ type RoomService interface {
 	Create(room Room) error
 	GetRoomCount(roomID string) (int, error)
 	UpdateRound(roomID string) error
+	GetAllRoom() ([]Room, error)
+	GetRoom(roomid string) (Room, error)
 }
 
 type roomValidator struct {
@@ -48,5 +50,35 @@ func (rs roomService) UpdateRound(roomID string) error {
 	stmnt := rs.db.MustPrepare(`UPDATE room SET current_round = current_round+1 WHERE id = $1;`)
 	_, err := stmnt.Exec(roomID)
 	return err
+
+}
+
+func (rs roomService) GetRoom(roomid string) (Room, error) {
+	var room Room
+	stmnt := rs.db.MustPrepare(`SELECT id,variant_type,variant_name,max_players,num_of_rounds,current_round FROM room WHERE id = $1;`)
+	row := stmnt.QueryRow(roomid)
+	err := row.Scan(&room.ID, &room.VariantType, &room.VariantName, &room.MaxPlayers, &room.NumOfRounds, &room.CurrentRound)
+	return room, err
+
+}
+
+func (rs roomService) GetAllRoom() ([]Room, error) {
+	var room Room
+	var rooms []Room
+	stmnt := rs.db.MustPrepare(`SELECT id,variant_type,variant_name,max_players,num_of_rounds,current_round FROM room WHERE current_round <> num_of_rounds;`)
+	rows, err := stmnt.Query()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		err := rows.Scan(&room.ID, &room.VariantType, &room.VariantName, &room.MaxPlayers, &room.NumOfRounds, &room.CurrentRound)
+		if err != nil {
+			return nil, err
+		}
+		rooms = append(rooms, room)
+
+	}
+
+	return rooms, err
 
 }
