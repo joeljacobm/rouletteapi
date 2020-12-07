@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"rouletteapi/models"
 	"rouletteapi/prometheus"
@@ -31,7 +30,6 @@ func NewPlayer(player models.PlayerService, room models.RoomService, bet models.
 func (pl *Player) PlayerGetResultHandler(w http.ResponseWriter, r *http.Request) {
 
 	pMap := mux.Vars(r)
-	fmt.Println(pMap)
 	playerid := pMap["playerid"]
 	if len(playerid) == 0 {
 		writeErrorWithMsg(w, errors.New("playerid must be provided"), http.StatusBadRequest)
@@ -56,7 +54,6 @@ func (pl *Player) PlayerGetResultHandler(w http.ResponseWriter, r *http.Request)
 		checkError(w, err)
 		return
 	}
-	fmt.Println(bet)
 
 	bets, err := calculateResult(bet)
 	if err != nil {
@@ -277,7 +274,6 @@ func (pl *Player) PlayerHandler(w http.ResponseWriter, r *http.Request) {
 				checkError(w, err)
 				return
 			}
-			fmt.Println(bet)
 			bets, err := calculateResult(bet)
 			if err != nil {
 				writeErrorWithMsg(w, err, http.StatusInternalServerError)
