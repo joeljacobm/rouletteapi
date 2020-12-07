@@ -18,9 +18,9 @@
 ### Running the application
 
 In the root directory,
-* Run `go install ./...` which will pull and install all the dependencies
-* Run `docker-compose up -d ` to start postgres. This should create the database and the tables.
-* Run `go run main.go` to start the application. Starts on port 8080 by default. To start on a different port run, `go run main.go -port=portnumber `
+* Run `docker-compose up -d ` to start postgresql. This should create the database and the tables.
+* Run `go run main.go` to start the application. This should also pull all the dependencies. Starts on port 8080 by default. To start on a different port run, `go run main.go -port=portnumber `
+* Upon successful start up, you should see `Started HTTP server on port 8080` message.
 
 ### Running the tests
 
@@ -44,9 +44,9 @@ In the root directory,
 * A player needs to join a room in order to play. Multiple players can join a room.
 * Bets can be placed during each round.
 * Currently supports straight up, colour and odd/even bets. More bet types can be added when required (configurable).
-* When all the players in a room are ready, spin occurs.
+* When all the players in a room are ready, spin occurs. Bets can't be placed after the player is ready.
 * After a spin, the result of the round is posted to the API server and players are moved to the next round.
-* Players can retrieve their results for the round indicating win or loss and the total return.
+* Players can retrieve their results for a round.
 * Also provides endpoint for retrieving the rooms, room status, player status. 
 
 
@@ -54,7 +54,7 @@ In the root directory,
 
 * JSON is used for all requests and responses
 * Status code 200 is used for all successfull responses
-* Status codes 404 and 500 used for unsuccessful responses
+* Status codes 404 and 500 are used for unsuccessful responses
 ### GET /room/variants
 
 * Get all the supported variant types
@@ -212,12 +212,14 @@ Response:
     "Message": "All the players are ready. Ready to spin"
 }
 ```
+Other Responses:
+1. Wait for the all the players to be ready
 
 
 ### POST /bet/result
 
 * Post the result of the round to the server after the spin
-
+* We are expecting another system to post the result of the rounds to the api server
 
 Request Body:
 
@@ -532,13 +534,13 @@ Response:
 
 More bet types and roulette variants can be supported by adding them into the oddsconfig.json and variantconfig.json files respectively. An application restart is required to pick up the new types.
 
-## Progressing the artifcat into production
+## Progressing the artifact into production
 
 * Separate production config file for running in production
 * Jenkins can be used for testing and deploying the binary.
 
 Steps :
-1. Test and build the binary using jenkins. Binary is tagged using the git tag
+1. Test and build the code using jenkins. Binary is tagged using the git tag.
 2. Copy the binary into artifactory managers like Jfrog
 3. Deploy the binary using jenkins specifying the tag of the binary. Tags allow easy rollbacks.
 
