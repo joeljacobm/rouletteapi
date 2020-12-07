@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"rouletteapi/models"
+	"rouletteapi/prometheus"
 	"strconv"
 	"time"
 
@@ -244,6 +245,7 @@ func (pl *Player) PlayerBetHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Message: "Succefully placed the bet",
 	}
+	prometheus.BetsTotal.Inc()
 	writeJSON(w, resp)
 
 }

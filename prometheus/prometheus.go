@@ -26,6 +26,20 @@ var (
 		},
 	)
 
+	BetsTotal = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: "rouletteapi",
+			Name:      "bets_total",
+			Help:      `Total number of Successful bets`,
+		})
+
+	RoomsTotal = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: "rouletteapi",
+			Name:      "rooms_total",
+			Help:      `Total number of rooms created `,
+		})
+
 	HttpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "rouletteapi_http_duration_seconds",
 		Help: "Duration of HTTP requests.",

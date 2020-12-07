@@ -34,6 +34,7 @@ In the root directory,
 * Accessible at /metrics endpoint
 * Prometheus metrics have been used for monitoring.
 * Uses middleware to monitor the number of hits and latency of each http request.
+* Metrics for total bets, active rooms, errors, statuscode have been provided
 
 ## Oveview
 

@@ -18,7 +18,6 @@ func writeJSON(w http.ResponseWriter, i interface{}) {
 }
 
 func writeErrorWithMsg(w http.ResponseWriter, err error, statuscode int) {
-	// statusCode := http.statusCode
 	prometheus.ErrorCounter.Inc()
 
 	http.Error(w, err.Error(), statuscode)

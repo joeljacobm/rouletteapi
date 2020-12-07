@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"rouletteapi/appconfigs"
 	"rouletteapi/models"
+	"rouletteapi/prometheus"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -45,6 +46,7 @@ func (ro *Room) RoomHandler(w http.ResponseWriter, r *http.Request) {
 		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
+	prometheus.RoomsTotal.Inc()
 
 	resp := struct {
 		message string
