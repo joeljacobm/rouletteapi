@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"rouletteapi/postgres"
 	"time"
 )
@@ -71,7 +70,6 @@ func (bs betService) GetBet(id string, roomid string, roundno int) ([]Bet, error
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(bet)
 		bets = append(bets, bet)
 
 	}
