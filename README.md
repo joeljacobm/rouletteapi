@@ -527,3 +527,27 @@ Response:
     ]
 }
 ```
+
+##  Adding more bet types and roulette variants
+
+More bet types and roulette variants can be supported by adding them into the oddsconfig.json and variantconfig.json files respectively. An application restart is required to pick up the new types.
+
+## Progressing the artifcat into production
+
+* Separate production config file for running in production
+* Jenkins can be used for testing and deploying the binary.
+
+Steps :
+1. Test and build the binary using jenkins. Binary is tagged using the git tag
+2. Copy the binary into artifactory managers like Jfrog
+3. Deploy the binary using jenkins specifying the tag of the binary. Tags allow easy rollbacks.
+
+It is important to automate this process 
+*
+* Increase Accuracy - A deployment includes a very specific set of tasks that must be executed precisely. If a single step is missed, it could result in problems. Automation provides consistency
+* Save Time 
+* Easy to deploy to new environments. Only some configuration needs to be changed.
+* Anyone in a team can deploy software.
+
+
+
