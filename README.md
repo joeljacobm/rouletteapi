@@ -27,6 +27,7 @@ In the root directory,
 In the root directory,
 * Run `go test ./...`
 * All the test files are located in the controllers package.
+* The tests do not depend on any external dependencies. The db interface has been mocked out in the mocks package.
 
 ### Monitoring
 
@@ -50,8 +51,9 @@ In the root directory,
 
 ## API Methods
 
-JSON is used for all requests and responses
-
+* JSON is used for all requests and responses
+* Status code 200 is used for all successfull responses
+* Status codes 404 and 500 used for unsuccessful responses
 ### GET /room/variants
 
 * Get all the supported variant types
@@ -137,7 +139,10 @@ Response:
     }
 }
 ```
-
+Errors : 
+1. Room does not exist
+2. Player is already in another room. Please exit the room first
+3. Player is already in the room
 
 ### POST /player/bet
 
@@ -182,7 +187,9 @@ Response:
     "Message": "Succefully placed the bet"
 }
 ```
-
+Errors :
+1. Player is not in the room
+2. Bet not accepted since player is already ready for the current spin
 
 
 ### POST /player/ready
@@ -260,7 +267,7 @@ Response:
             "bet_result": {
                 "number": 24,
                 "colour": 1,
-                "oddeven": 0
+                "oddeven": 1
             }
         },
         {
@@ -277,7 +284,7 @@ Response:
             "bet_result": {
                 "number": 24,
                 "colour": 1,
-                "oddeven": 0
+                "oddeven": 1
             }
         }
     ]
@@ -341,6 +348,10 @@ Response:
 }
 ```
 
+Errors : 
+
+1. roomid must be provided
+
 ### GET /room/{roomid}
 
 * Get the status of a specific room
@@ -389,7 +400,7 @@ Response:
             "bet_result": {
                 "number": 24,
                 "colour": 1,
-                "oddeven": 0
+                "oddeven": 1
             }
         },
         {
@@ -406,7 +417,7 @@ Response:
             "bet_result": {
                 "number": 24,
                 "colour": 1,
-                "oddeven": 0
+                "oddeven": 1
             }
         }
     ]
@@ -444,7 +455,7 @@ Response:
                     "bet_result": {
                         "number": 24,
                         "colour": 1,
-                        "oddeven": 0
+                        "oddeven": 1
                     }
                 },
                 {
@@ -461,7 +472,7 @@ Response:
                     "bet_result": {
                         "number": 24,
                         "colour": 1,
-                        "oddeven": 0
+                        "oddeven": 1
                     }
                 }
             ],
@@ -488,7 +499,7 @@ Response:
                     "bet_result": {
                         "number": 29,
                         "colour": 2,
-                        "oddeven": 0
+                        "oddeven": 2
                     }
                 },
                 {
@@ -505,7 +516,7 @@ Response:
                     "bet_result": {
                         "number": 29,
                         "colour": 2,
-                        "oddeven": 0
+                        "oddeven": 2
                     }
                 }
             ],

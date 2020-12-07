@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	db       = postgres.DefaultConnection()
+	db      postgres.DB
 	services = mocks.NewMockServices(db)
 	roomC    = NewRoom(services.Room)
 	playerC  = NewPlayer(services.Player, services.Room, services.Bet)

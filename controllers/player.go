@@ -127,7 +127,7 @@ func checkIfRoomIsActive(pl *Player, p models.Player) (bool, error) {
 	}
 
 	if count == 0 {
-		return false, errors.New("Room not present")
+		return false, errors.New("Room does not exist")
 	}
 	return true, nil
 }
@@ -218,7 +218,7 @@ func (pl *Player) PlayerBetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if p.ReadyStatus {
-		writeErrorWithMsg(w, errors.New("Bet not accepted since player is ready for the current spin"), http.StatusNotFound)
+		writeErrorWithMsg(w, errors.New("Bet not accepted since player is already ready for the current spin"), http.StatusNotFound)
 		return
 	}
 

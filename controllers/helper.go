@@ -66,8 +66,10 @@ func calculateResult(bets []models.Bet) ([]models.Bet, error) {
 			var result int
 			if bets[k].BetResult.Number%2 == 0 {
 				result = 1
+				bets[k].BetResult.OddEven = 1
 			} else {
 				result = 2
+				bets[k].BetResult.OddEven = 2
 			}
 			if bets[k].Selection == result {
 				oddsDecimal := appconfigs.GetRouletteOddsMap(bets[k].BetType)

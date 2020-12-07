@@ -55,6 +55,3 @@ func createDefaultConnection() *sql.DB {
 
 }
 
-func CreateCustomDB(db *sql.DB) DB {
-	return DB{db}
-}
