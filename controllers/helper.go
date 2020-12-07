@@ -65,10 +65,8 @@ func calculateResult(bets []models.Bet) ([]models.Bet, error) {
 			var result int
 			if bets[k].BetResult.Number%2 == 0 {
 				result = 1
-				// bets[k].BetResult.OddEven = 1
 			} else {
 				result = 2
-				// bets[k].BetResult.OddEven = 2
 			}
 			if bets[k].Selection == result {
 				oddsDecimal := appconfigs.GetRouletteOddsMap(bets[k].BetType)
@@ -85,11 +83,7 @@ func calculateResult(bets []models.Bet) ([]models.Bet, error) {
 }
 
 func resultWin(bet *models.Bet, odds float64) {
-	if bet.BetResult.Number%2 == 0 {
-		bet.BetResult.OddEven = 1
-	} else {
-		bet.BetResult.OddEven = 0
-	}
+	setOddEven(bet)
 	bet.TotalReturn = (odds + 1) * bet.Stake
 	bet.Result = 1
 	bet.ResultText = "WIN"
@@ -97,13 +91,17 @@ func resultWin(bet *models.Bet, odds float64) {
 }
 
 func resultLost(bet *models.Bet) {
+	setOddEven(bet)
+	bet.Result = 0
+	bet.ResultText = "LOST"
+}
+
+func setOddEven(bet *models.Bet) {
 	if bet.BetResult.Number%2 == 0 {
 		bet.BetResult.OddEven = 1
 	} else {
 		bet.BetResult.OddEven = 0
 	}
-	bet.Result = 0
-	bet.ResultText = "LOST"
 }
 
 func calculateLiability(bettype int, stake float64) float64 {
