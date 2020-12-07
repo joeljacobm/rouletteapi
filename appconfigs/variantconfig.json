@@ -8,7 +8,7 @@
     "2":{
         "variant_name":"superboost_roulette",
        "variant_type":2,
-       "max_players":7,
-       "max_rounds":10
+       "max_players":10,
+       "max_rounds":15
     }
  }

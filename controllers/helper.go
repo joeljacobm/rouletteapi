@@ -2,30 +2,37 @@ package controllers
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"rouletteapi/configs"
+	"rouletteapi/appconfigs"
 	"rouletteapi/models"
 	"rouletteapi/prometheus"
 )
 
 func writeJSON(w http.ResponseWriter, i interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(i)
-	if err != nil {
-		panic(err)
-	}
+	json.NewEncoder(w).Encode(i)
 }
 
-func writeErrorWithMsg(w http.ResponseWriter, err error) {
-	statusCode := http.StatusInternalServerError
+func writeErrorWithMsg(w http.ResponseWriter, err error, statuscode int) {
+	// statusCode := http.statusCode
 	prometheus.ErrorCounter.Inc()
 
-	http.Error(w, err.Error(), statusCode)
+	http.Error(w, err.Error(), statuscode)
 }
 
-func GenerateHash() string {
+func checkError(w http.ResponseWriter, err error) {
+	if err == sql.ErrNoRows {
+		writeErrorWithMsg(w, errors.New("Requested resource not found"), http.StatusNotFound)
+		return
+	}
+	writeErrorWithMsg(w, err, http.StatusInternalServerError)
+}
+
+func generateHash() string {
 	n := 5
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {
@@ -42,14 +49,14 @@ func calculateResult(bets []models.Bet) ([]models.Bet, error) {
 		switch bets[k].BetType {
 		case 1:
 			if bets[k].Selection == bets[k].BetResult.Number {
-				oddsDecimal := configs.GetRouletteOddsMap(bets[k].BetType)
+				oddsDecimal := appconfigs.GetRouletteOddsMap(bets[k].BetType)
 				resultWin(&bets[k], oddsDecimal)
 			} else {
 				resultLost(&bets[k])
 			}
 		case 2:
 			if bets[k].Selection == bets[k].BetResult.Colour {
-				oddsDecimal := configs.GetRouletteOddsMap(bets[k].BetType)
+				oddsDecimal := appconfigs.GetRouletteOddsMap(bets[k].BetType)
 				resultWin(&bets[k], oddsDecimal)
 
 			} else {
@@ -63,7 +70,7 @@ func calculateResult(bets []models.Bet) ([]models.Bet, error) {
 				result = 2
 			}
 			if bets[k].Selection == result {
-				oddsDecimal := configs.GetRouletteOddsMap(bets[k].BetType)
+				oddsDecimal := appconfigs.GetRouletteOddsMap(bets[k].BetType)
 				resultWin(&bets[k], oddsDecimal)
 			} else {
 				resultLost(&bets[k])
@@ -89,6 +96,6 @@ func resultLost(bet *models.Bet) {
 }
 
 func calculateLiability(bettype int, stake float64) float64 {
-	odds := configs.GetRouletteOddsMap(bettype)
+	odds := appconfigs.GetRouletteOddsMap(bettype)
 	return odds * stake
 }

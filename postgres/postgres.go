@@ -46,6 +46,11 @@ func createDefaultConnection() *sql.DB {
 	if err != nil {
 		log.Fatalf("Error connecting to the db %s", err)
 	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("Error connecting to the database %s", err)
+
+	}
 	return db
 
 }

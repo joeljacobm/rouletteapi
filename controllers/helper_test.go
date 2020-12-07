@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"rouletteapi/appconfigs"
 	"rouletteapi/mocks"
 	"rouletteapi/models"
 	"rouletteapi/postgres"
@@ -60,6 +61,7 @@ func TestCalculateResult(t *testing.T) {
 
 func TestCalculateLiability(t *testing.T) {
 
+	appconfigs.LoadRouletteOddsMap("../appconfigs/oddsconfig.json")
 	stake := 25.00
 	liability := calculateLiability(1, stake)
 

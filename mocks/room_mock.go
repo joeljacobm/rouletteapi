@@ -33,12 +33,13 @@ func (rs RoomService) UpdateRound(roomID string) error {
 }
 
 func (rs RoomService) GetRoom(roomid string) (models.Room, error) {
-	return models.Room{ID: "5F9E314910", VariantType: 1, VariantName: "sky_roulette"}, nil
+	return models.Room{ID: "5F9E314910",
+		RoomVariant: models.Variant{VariantType: 1, VariantName: "sky_roulette"}}, nil
 }
 
 func (rs RoomService) GetAllRoom() ([]models.Room, error) {
 
-	return []models.Room{{ID: "5F9E314910", VariantType: 1, VariantName: "sky_roulette"},
-		{ID: "13D66E88E2", VariantType: 2, VariantName: "superboost_roulett"}}, nil
+	return []models.Room{{ID: "5F9E314910", RoomVariant: models.Variant{VariantType: 1, VariantName: "sky_roulette"}},
+		{ID: "13D66E88E2", RoomVariant: models.Variant{VariantType: 2, VariantName: "superboost_roulett"}}}, nil
 
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"rouletteapi/models"
 	"strconv"
@@ -28,39 +29,37 @@ func NewPlayer(player models.PlayerService, room models.RoomService, bet models.
 
 func (pl *Player) PlayerGetResultHandler(w http.ResponseWriter, r *http.Request) {
 
-	// query := r.URL.Query()
-
 	pMap := mux.Vars(r)
-
+	fmt.Println(pMap)
 	playerid := pMap["playerid"]
 	if len(playerid) == 0 {
-		writeErrorWithMsg(w, errors.New("playerid"))
+		writeErrorWithMsg(w, errors.New("playerid must be provided"), http.StatusBadRequest)
 		return
 	}
 
 	roomid := pMap["roomid"]
 	if len(roomid) == 0 {
-		writeErrorWithMsg(w, errors.New("roomid"))
+		writeErrorWithMsg(w, errors.New("roomid must be provided"), http.StatusBadRequest)
 		return
 	}
 
 	roundno := pMap["roundno"]
-
 	roundInt, err := strconv.Atoi(roundno)
 	if roundInt == 0 || err != nil {
-		writeErrorWithMsg(w, errors.New("roundint"))
+		writeErrorWithMsg(w, errors.New("round number must be provided"), http.StatusBadRequest)
 		return
 	}
 
 	bet, err := pl.Bet.GetBet(playerid, roomid, roundInt)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		checkError(w, err)
 		return
 	}
+	fmt.Println(bet)
 
 	bets, err := calculateResult(bet)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -80,24 +79,24 @@ func (pl *Player) PlayerJoinHandler(w http.ResponseWriter, r *http.Request) {
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	if player.DisplayName == "" {
-		dName := "Roulette-" + GenerateHash() + "-Master"
+		dName := "Roulette-" + generateHash() + "-Master"
 		player.DisplayName = dName
 	}
 
 	ok, err := checkIfRoomIsActive(pl, player)
 	if err != nil || !ok {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusNotFound)
 		return
 	}
 
 	ok, err = checkIfPlayerIsInRoom(pl, player)
 	if err != nil || !ok {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusNotFound)
 		return
 	}
 
@@ -106,7 +105,7 @@ func (pl *Player) PlayerJoinHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = pl.Player.Join(player)
 	if err != nil {
-		writeErrorWithMsg(w, errors.New("Cannot join the room"))
+		writeErrorWithMsg(w, errors.New("Cannot join the room"), http.StatusNotFound)
 		return
 	}
 	resp := struct {
@@ -119,7 +118,6 @@ func (pl *Player) PlayerJoinHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, resp)
 }
 
-// Move this to models
 func checkIfRoomIsActive(pl *Player, p models.Player) (bool, error) {
 
 	var count int
@@ -136,6 +134,12 @@ func checkIfRoomIsActive(pl *Player, p models.Player) (bool, error) {
 
 func checkIfPlayerIsInRoom(pl *Player, p models.Player) (bool, error) {
 
+	count, err := pl.Player.CheckPlayerInRoomCount(p.ID)
+	if count > 0 || err != nil {
+		return false, errors.New("Player is already in another room. Please exit the room first")
+
+	}
+
 	player, err := pl.Player.GetPlayer(p.ID, p.RoomID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -148,11 +152,6 @@ func checkIfPlayerIsInRoom(pl *Player, p models.Player) (bool, error) {
 		return false, errors.New("Player is already in the room")
 	}
 
-	count, err := pl.Player.CheckPlayerInRoomCount(p.ID)
-	if count > 0 || err != nil {
-		return false, errors.New("Player is already in another room. Please exit the room first")
-
-	}
 	return true, nil
 }
 
@@ -160,19 +159,19 @@ func (pl *Player) PlayerReadyHandler(w http.ResponseWriter, r *http.Request) {
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	err = pl.Player.UpdateReadyStatusTrue(player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 	var count int
 	count, err = pl.Player.GetReadyStatusForRound(player.RoomID)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -201,31 +200,31 @@ func (pl *Player) PlayerBetHandler(w http.ResponseWriter, r *http.Request) {
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	p, err := pl.Player.GetPlayer(player.ID, player.RoomID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeErrorWithMsg(w, errors.New("Player is not in the room"))
+			writeErrorWithMsg(w, errors.New("Player is not in the room"), http.StatusNotFound)
 		}
 		return
 	}
 
 	if !p.InRoom {
-		writeErrorWithMsg(w, errors.New("Player is not in the room"))
+		writeErrorWithMsg(w, errors.New("Player is not in the room"), http.StatusNotFound)
 		return
 	}
 
 	if p.ReadyStatus {
-		writeErrorWithMsg(w, errors.New("Bet not accepted since player is ready for the current spin"))
+		writeErrorWithMsg(w, errors.New("Bet not accepted since player is ready for the current spin"), http.StatusNotFound)
 		return
 	}
 
 	room, err := pl.Room.GetRoom(player.RoomID)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -235,7 +234,7 @@ func (pl *Player) PlayerBetHandler(w http.ResponseWriter, r *http.Request) {
 		bet.RoundNo = room.CurrentRound
 		err := pl.Bet.PlaceBet(bet, player)
 		if err != nil {
-			writeErrorWithMsg(w, err)
+			writeErrorWithMsg(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -253,18 +252,17 @@ func (pl *Player) PlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	players, err := pl.Player.GetAllPlayers()
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		checkError(w, err)
 		return
 	}
 
 	for k, p := range players {
 		playerBets, err := pl.Bet.GetBetForPlayer(p.ID)
 		if err != nil {
-			writeErrorWithMsg(w, err)
+			checkError(w, err)
 			return
 		}
 		var round int
-
 		for _, b := range playerBets {
 
 			if b.RoundNo == round {
@@ -274,12 +272,13 @@ func (pl *Player) PlayerHandler(w http.ResponseWriter, r *http.Request) {
 			round = b.RoundNo
 			bet, err := pl.Bet.GetBet(p.ID, p.RoomID, b.RoundNo)
 			if err != nil {
-				writeErrorWithMsg(w, err)
+				checkError(w, err)
 				return
 			}
+			fmt.Println(bet)
 			bets, err := calculateResult(bet)
 			if err != nil {
-				writeErrorWithMsg(w, err)
+				writeErrorWithMsg(w, err, http.StatusInternalServerError)
 				return
 			}
 			players[k].BetsPlaced = append(players[k].BetsPlaced, bets...)
@@ -303,13 +302,13 @@ func (pl *Player) PlayerExitHandler(w http.ResponseWriter, r *http.Request) {
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	err = pl.Player.Exit(player)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusNotFound)
 		return
 	}
 

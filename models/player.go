@@ -5,7 +5,7 @@ import (
 	"rouletteapi/postgres"
 	"time"
 )
-
+// PlayerService Provides an interface for accessing the player table 
 type PlayerService interface {
 	Join(player Player) error
 	GetPlayer(id string, roomid string) (Player, error)
@@ -25,6 +25,7 @@ type playerService struct {
 	db postgres.DB
 }
 
+// Player implements the PlayerService Interface
 type Player struct {
 	ID          string    `json:"id"`
 	RoomID      string    `json:"room_id"`
@@ -74,6 +75,7 @@ func (ps playerService) GetAllPlayers() ([]Player, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&player.Created, &player.ID, &player.RoomID, &player.InRoom, &player.ReadyStatus, &player.DisplayName)
 		if err != nil {

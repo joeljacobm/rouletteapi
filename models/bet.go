@@ -1,10 +1,12 @@
 package models
 
 import (
+	"fmt"
 	"rouletteapi/postgres"
 	"time"
 )
 
+// BetService Provides an interface for accessing the bet table
 type BetService interface {
 	PlaceBet(bet Bet, player Player) error
 	InsertResult(bet Bet) error
@@ -16,6 +18,8 @@ type BetService interface {
 type betService struct {
 	db postgres.DB
 }
+
+// Bet implements the PlayerService Interface
 type Bet struct {
 	RoomID      string  `json:"room_id"`
 	RoundNo     int     `json:"round_no"`
@@ -61,16 +65,16 @@ func (bs betService) GetBet(id string, roomid string, roundno int) ([]Bet, error
 	if err != nil {
 		return nil, err
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&bet.RoomID, &bet.RoundNo, &bet.BetType, &bet.Selection, &bet.Stake, &bet.Liability, &bet.BetResult.Number, &bet.BetResult.Colour)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(bet)
 		bets = append(bets, bet)
 
 	}
-
 	return bets, err
 }
 
@@ -82,7 +86,7 @@ func (bs betService) GetBetForRoom(roomid string) ([]Bet, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&bet.RoomID, &bet.RoundNo, &bet.BetType, &bet.Selection, &bet.Stake, &bet.Liability, &bet.BetResult.Number, &bet.BetResult.Colour)
 		if err != nil {
@@ -103,7 +107,7 @@ func (bs betService) GetBetForPlayer(playerid string) ([]Bet, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&bet.RoomID, &bet.RoundNo, &bet.BetType, &bet.Selection, &bet.Stake, &bet.Liability, &bet.BetResult.Number, &bet.BetResult.Colour)
 		if err != nil {

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 	"rouletteapi/controllers"
 	"rouletteapi/models"
 	"rouletteapi/prometheus"
@@ -20,9 +21,10 @@ func SetRoutes(services models.Services) http.Handler {
 
 	r.Use(prometheus.PrometheusMiddleware)
 	r.Handle("/metrics", promhttp.Handler())
-
+	r.PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	r.HandleFunc("/room", roomController.RoomHandler).Methods("POST")
 	r.HandleFunc("/room", roomController.RoomGetAllHandler).Methods("GET")
+	r.HandleFunc("/room/variants", roomController.RoomVariantHandler).Methods("GET")
 	r.HandleFunc("/room/{id}", roomController.RoomGetHandler).Methods("GET")
 
 	r.HandleFunc("/player", playerController.PlayerHandler).Methods("GET")

@@ -28,31 +28,31 @@ func (b *Bet) BetResultHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	err := json.NewDecoder(r.Body).Decode(&bet)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	room, err := b.Room.GetRoom(bet.RoomID)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		checkError(w, err)
 		return
 	}
 	bet.RoundNo = room.CurrentRound
 
 	err = b.Bet.InsertResult(bet)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 	err = b.Room.UpdateRound(bet.RoomID)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	err = b.Player.UpdateReadyStatusFalse(bet.RoomID)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 	resp := struct {
@@ -71,13 +71,13 @@ func (b *Bet) BetHandler(w http.ResponseWriter, r *http.Request) {
 
 	roomid := rMap["roomid"]
 	if len(roomid) == 0 {
-		writeErrorWithMsg(w, errors.New("roomid must be provided"))
+		writeErrorWithMsg(w, errors.New("roomid must be provided"), http.StatusNotFound)
 		return
 	}
 
 	bets, err := b.Bet.GetBetForRoom(roomid)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		checkError(w, err)
 		return
 	}
 	resp := struct {

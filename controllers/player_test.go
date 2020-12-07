@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"rouletteapi/configs"
+	"rouletteapi/appconfigs"
 	"rouletteapi/models"
 	"testing"
 
@@ -48,7 +48,7 @@ func TestPlayerJoinHandler(t *testing.T) {
 func TestPlayerBetHandler(t *testing.T) {
 	testData := models.Player{
 		RoomID: "100D2BF54B",
-		ID:     "5EB8E64F56",
+		ID:     "6EB9E64G56",
 		BetsPlaced: []models.Bet{
 			{RoundNo: 1, BetType: 1, Stake: 1.5, Selection: 24},
 			{RoundNo: 1, BetType: 2, Stake: 1.5, Selection: 1},
@@ -60,7 +60,7 @@ func TestPlayerBetHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/player/join", bytes.NewReader(b))
 	r.Header.Add("Content-Type", "application/json")
-	playerC.PlayerJoinHandler(w, r)
+	playerC.PlayerBetHandler(w, r)
 
 	resp, _ := ioutil.ReadAll(w.Body)
 
@@ -75,7 +75,7 @@ func TestPlayerBetHandler(t *testing.T) {
 
 func TestPlayerGetResultHandler(t *testing.T) {
 
-	configs.LoadRouletteOddsMap("../configs/oddsconfig.json")
+	appconfigs.LoadRouletteOddsMap("../appconfigs/oddsconfig.json")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/player/result", nil)
@@ -126,12 +126,89 @@ func TestPlayerReadyHandler(t *testing.T) {
 	}
 	b, _ := json.Marshal(testData)
 
-
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/player/ready", bytes.NewReader(b))
 
 	r.Header.Add("Content-Type", "application/json")
 	playerC.PlayerReadyHandler(w, r)
+
+	resp, _ := ioutil.ReadAll(w.Body)
+
+	expected := struct {
+		message string
+		Data    models.Player
+	}{}
+	json.Unmarshal(resp, &expected)
+	assert.Equal(t, 200, w.Result().StatusCode)
+
+}
+
+func TestPlayerHandler(t *testing.T) {
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/player", nil)
+
+	r.Header.Add("Content-Type", "application/json")
+	playerC.PlayerHandler(w, r)
+
+	resp, _ := ioutil.ReadAll(w.Body)
+
+	expectedData := []models.Player{
+		{RoomID: "100D2BF54B", ID: "6EB8E64F56",
+			BetsPlaced: []models.Bet{
+				{RoundNo: 1, BetType: 1, Stake: 1.5, Selection: 24, ResultText: "WIN", TotalReturn: 54},
+				{RoundNo: 1, BetType: 2, Stake: 1.5, Selection: 1, ResultText: "LOST", TotalReturn: 0},
+			}, InRoom: true}, {RoomID: "200F2BF54B", ID: "7EB9E64F56",
+			BetsPlaced: []models.Bet{
+				{RoundNo: 1, BetType: 1, Stake: 1.5, Selection: 24, ResultText: "WIN", TotalReturn: 54},
+				{RoundNo: 1, BetType: 3, Stake: 1.5, Selection: 1, ResultText: "WIN", TotalReturn: 3},
+			}, InRoom: false},
+	}
+	actual := struct {
+		message string
+		Data    []models.Player
+	}{}
+	json.Unmarshal(resp, &actual)
+
+	player1 := actual.Data[0]
+
+	player2 := actual.Data[1]
+	player1bet1 := player1.BetsPlaced[0]
+	player1bet2 := player1.BetsPlaced[1]
+	player2bet1 := player2.BetsPlaced[0]
+	player2bet2 := player2.BetsPlaced[1]
+
+	assert.Equal(t, 200, w.Result().StatusCode)
+	assert.Equal(t, expectedData[0].ID, player1.ID)
+	assert.Equal(t, expectedData[0].RoomID, player1.RoomID)
+	assert.Equal(t, expectedData[0].ReadyStatus, player1.ReadyStatus)
+	assert.Equal(t, expectedData[0].BetsPlaced[0].ResultText, player1bet1.ResultText)
+	assert.Equal(t, expectedData[0].BetsPlaced[1].ResultText, player1bet2.ResultText)
+	assert.Equal(t, expectedData[0].BetsPlaced[0].TotalReturn, player1bet1.TotalReturn)
+	assert.Equal(t, expectedData[0].BetsPlaced[1].TotalReturn, player1bet2.TotalReturn)
+
+	assert.Equal(t, expectedData[1].ID, player2.ID)
+	assert.Equal(t, expectedData[1].RoomID, player2.RoomID)
+	assert.Equal(t, expectedData[1].ReadyStatus, player2.ReadyStatus)
+	assert.Equal(t, expectedData[1].BetsPlaced[0].ResultText, player2bet1.ResultText)
+	assert.Equal(t, expectedData[1].BetsPlaced[1].ResultText, player2bet2.ResultText)
+	assert.Equal(t, expectedData[1].BetsPlaced[0].TotalReturn, player2bet1.TotalReturn)
+	assert.Equal(t, expectedData[1].BetsPlaced[1].TotalReturn, player2bet2.TotalReturn)
+
+}
+
+func TestPlayerExitHandler(t *testing.T) {
+
+	testData := models.Player{
+		ID:     "5EB8E64F56",
+	}
+	b, _ := json.Marshal(testData)
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/player/exit", bytes.NewReader(b))
+
+	r.Header.Add("Content-Type", "application/json")
+	playerC.PlayerExitHandler(w, r)
 
 	resp, _ := ioutil.ReadAll(w.Body)
 

@@ -1,10 +1,11 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"rouletteapi/configs"
+	"rouletteapi/appconfigs"
 	"rouletteapi/models"
 	"time"
 
@@ -23,23 +24,25 @@ func NewRoom(room models.RoomService) *Room {
 
 func (ro *Room) RoomHandler(w http.ResponseWriter, r *http.Request) {
 
+	var variant models.Variant
 	var room models.Room
-	err := json.NewDecoder(r.Body).Decode(&room)
+	err := json.NewDecoder(r.Body).Decode(&variant)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
-	roomID := GenerateHash()
+	roomID := generateHash()
 
-	room = configs.GetRouletteVariantMap(room.VariantType)
+	variant = appconfigs.GetRouletteVariantMap(variant.VariantType)
 
 	room.ID = roomID
 	room.Created = time.Now()
 	room.CurrentRound = 1
+	room.RoomVariant = variant
 
 	err = ro.Room.Create(room)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -57,7 +60,11 @@ func (ro *Room) RoomGetAllHandler(w http.ResponseWriter, r *http.Request) {
 
 	rooms, err := ro.Room.GetAllRoom()
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		if err == sql.ErrNoRows {
+			writeErrorWithMsg(w, err, http.StatusNotFound)
+			return
+		}
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -71,19 +78,37 @@ func (ro *Room) RoomGetAllHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, resp)
 }
 
+func (ro *Room) RoomVariantHandler(w http.ResponseWriter, r *http.Request) {
+
+	roomVariants := appconfigs.GetAllRouletteVariantMap()
+
+	resp := struct {
+		message string
+		Data    []models.Variant
+	}{
+		message: "Successfully created the room",
+		Data:    roomVariants,
+	}
+	writeJSON(w, resp)
+}
+
 func (ro *Room) RoomGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	rMap := mux.Vars(r)
 
 	roomid := rMap["id"]
 	if len(roomid) == 0 {
-		writeErrorWithMsg(w, errors.New("roomid must be provided"))
+		writeErrorWithMsg(w, errors.New("roomid must be provided"), http.StatusNotFound)
 		return
 	}
 
 	room, err := ro.Room.GetRoom(roomid)
 	if err != nil {
-		writeErrorWithMsg(w, err)
+		if err == sql.ErrNoRows {
+			writeErrorWithMsg(w, err, http.StatusNotFound)
+			return
+		}
+		writeErrorWithMsg(w, err, http.StatusInternalServerError)
 		return
 	}
 
