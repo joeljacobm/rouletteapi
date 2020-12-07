@@ -46,8 +46,8 @@ In the root directory,
 * Currently supports straight up, colour and odd/even bets. More bet types can be added when required (configurable).
 * When all the players in a room are ready, spin occurs. Bets can't be placed after the player is ready.
 * After a spin, the result of the round is posted to the API server and players are moved to the next round.
-* Players can retrieve their results for a round.
-* Also provides endpoint for retrieving the rooms, room status, player status. 
+* Players can retrieve their results for a round. The result includes total return, win/loss, player's bet selection and the bet result.
+* Also provides endpoint for retrieving the rooms, room status, player status, all players. 
 
 
 ## API Methods
@@ -544,8 +544,8 @@ Steps :
 2. Copy the binary into artifactory managers like Jfrog
 3. Deploy the binary using jenkins specifying the tag of the binary. Tags allow easy rollbacks.
 
-It is important to automate this process 
-*
+### It is important to automate this process 
+
 * Increase Accuracy - A deployment includes a very specific set of tasks that must be executed precisely. If a single step is missed, it could result in problems. Automation provides consistency
 * Save Time 
 * Easy to deploy to new environments. Only some configuration needs to be changed.
